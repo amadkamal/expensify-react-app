@@ -1,34 +1,49 @@
-//console.log(__dirname)
-// entry -> output
 const path = require('path');
-
-module.exports = {
-    entry: './src/app.js',
-    output: {
-        'path': path.join(__dirname, 'public'), //absolute path
-        'filename':'bundle.js'
-    },
-    module: {
-        rules: [{
-            loader: 'babel-loader',
-            test: /\.js$/,
-            exclude: /node_modules/
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
+module.exports = (env) => {
+    const isProduction = env === 'production';
+    const CSSExtract = new ExtractTextPlugin('styles.css');
+    console.log('env', env);
+    return {
+        entry: './src/app.js',
+        output: {
+            'path': path.join(__dirname, 'public'), //absolute path
+            'filename':'bundle.js'
         },
-        {
-            test:/\.s?css$/,
-            use: [
-                'style-loader',
-                'css-loader',
-                'sass-loader'
-            ]
-        }]
-    },
-    devtool:'cheap-module-eval-source-map',
-    devServer: {
-        contentBase: path.join(__dirname, 'public'),
-        historyApiFallback: true,
-        host: '127.0.0.1'
-    }
+        module: {
+            rules: [{
+                loader: 'babel-loader',
+                test: /\.js$/,
+                exclude: /node_modules/
+            },
+            {
+                test:/\.s?css$/,
+                use: CSSExtract.extract({
+                    use: [
+                        {
+                            loader: 'css-loader',
+                            options: {
+                                sourceMap: true
+                            }
+                        },
+                        {
+                            loader: 'sass-loader',
+                            options: {
+                                sourceMap: true
+                            }
+                        }
+                    ]
+                })
+            }]
+        },
+        plugins: [
+            CSSExtract
+        ],
+        devtool: isProduction? 'source-map' : 'inline-source-map',
+        devServer: {
+            contentBase: path.join(__dirname, 'public'),
+            historyApiFallback: true,
+            host: '127.0.0.1'
+        }
+    };
 };
-
-//loader
